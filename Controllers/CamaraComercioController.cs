@@ -1,70 +1,61 @@
-using ComponentesIA.Models.DTOs;
-using ComponentesIA.Services.Contracts;
+using ComponentesIA.Application.DTOs;
+using ComponentesIA.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using ComponentesIA.Helpers;
 
 namespace ComponentesIA.Controllers;
 
 /// <summary>
-/// Controlador para gestionar las operaciones relacionadas con la Cámara de Comercio.
+/// Controlador legacy para procesamiento directo de Cámara de Comercio.
+/// Se recomienda usar POST /api/extraction/batches con la plantilla correspondiente.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class CamaraComercioController : ControllerBase
 {
     private readonly ILogger<CamaraComercioController> _logger;
-    private readonly IExtractionService _extractionService;
+    private readonly IDocumentBatchService _batchService;
 
     public CamaraComercioController(
         ILogger<CamaraComercioController> logger,
-        IExtractionService extractionService)
+        IDocumentBatchService batchService)
     {
         _logger = logger;
-        _extractionService = extractionService;
+        _batchService = batchService;
     }
 
     /// <summary>
-    /// Recibe un documento PDF (certificado de Cámara de Comercio), extrae la información y la valida.
+    /// Recibe un documento PDF (certificado de Cámara de Comercio) y lo procesa como lote de un documento.
+    /// Requiere que exista una plantilla con código "camara_comercio".
     /// </summary>
-    /// <param name="request">La solicitud que contiene el archivo PDF.</param>
-    /// <returns>Un objeto con la información extraída o un error si la validación falla.</returns>
     [HttpPost("upload-document")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BatchResponseDto), StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UploadDocument([FromForm] UploadRequestDto request)
+    public async Task<IActionResult> UploadDocument(
+        [FromForm] Guid templateId,
+        [FromForm] IFormFile file,
+        CancellationToken ct)
     {
-        if (request.File == null || request.File.Length == 0)
-        {
-            _logger.LogWarning("Se intentó subir un archivo vacío.");
+        if (file == null || file.Length == 0)
             return BadRequest("El archivo no puede estar vacío.");
-        }
-        
-        if (request.File.ContentType != "application/pdf")
-        {
-            _logger.LogWarning("Se intentó subir un archivo que no es PDF: {ContentType}", request.File.ContentType);
+
+        if (file.ContentType != "application/pdf")
             return BadRequest("El archivo debe ser un PDF.");
-        }
 
-        _logger.LogInformation("Archivo '{FileName}' recibido, iniciando procesamiento.", request.File.FileName);
+        _logger.LogInformation("Archivo '{FileName}' recibido vía endpoint legacy.", file.FileName);
 
-        var result = await _extractionService.ExtractDataFromCamaraComercio(request.File);
-
-        if (result == null)
+        try
         {
-            _logger.LogError("No se pudo extraer información del archivo '{FileName}'.", request.File.FileName);
-            return Problem("No se pudo procesar el documento o la extracción no arrojó resultados.");
+            var dto = new CreateBatchDto { TemplateId = templateId };
+            var result = await _batchService.CreateBatchAsync(dto, new[] { file }, ct);
+            return Accepted(result);
         }
-        
-        // Valida el NIT extraído
-        if (!string.IsNullOrEmpty(result.Nit) && !NitValidator.IsValid(result.Nit))
+        catch (InvalidOperationException ex)
         {
-            _logger.LogWarning("El NIT extraído '{Nit}' no es válido para el archivo '{FileName}'.", result.Nit, request.File.FileName);
-            return BadRequest($"El NIT extraído ('{result.Nit}') no es válido según las reglas de la DIAN.");
+            return NotFound(new { message = ex.Message });
         }
-        
-        _logger.LogInformation("El NIT '{Nit}' fue validado exitosamente.", result.Nit);
-
-        return Ok(result);
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

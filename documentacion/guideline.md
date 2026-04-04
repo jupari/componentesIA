@@ -759,9 +759,3 @@ Debería ser construir esto en orden:
 5. **dispatcher asíncrono**
 6. **procesador del job**
 7. **integración Gemini**
-
-
-[1]: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/reference/libraries?utm_source=chatgpt.com "Vertex AI client libraries"
-[2]: https://docs.cloud.google.com/tasks/docs?utm_source=chatgpt.com "Cloud Tasks documentation"
-[3]: https://docs.cloud.google.com/pubsub/docs/overview?utm_source=chatgpt.com "What is Pub/Sub?"
-[4]: https://docs.cloud.google.com/document-ai/docs/libraries?utm_source=chatgpt.com "Document AI client libraries"

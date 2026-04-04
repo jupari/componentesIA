@@ -1,14 +1,21 @@
+using System.Threading.Channels;
+using System.Text.Json.Serialization.Metadata;
+using ComponentesIA.Application.Builders;
+using ComponentesIA.Application.Interfaces;
+using ComponentesIA.Application.UseCases;
+using ComponentesIA.Infrastructure.AI;
+using ComponentesIA.Infrastructure.Persistence;
+using ComponentesIA.Infrastructure.Queue;
+using ComponentesIA.Infrastructure.Repositories;
+using ComponentesIA.Infrastructure.Storage;
 using ComponentesIA.Middleware;
 using ComponentesIA.Models.Settings;
-using ComponentesIA.Services;
-using ComponentesIA.Services.Contracts;
 using Google.Cloud.AIPlatform.V1;
-using Serilog;
-using Serilog.Events;
-using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using System.Text.Json.Serialization.Metadata;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,13 +50,38 @@ builder.Services.AddSwaggerGen(options =>
 // 3. Configuración de Opciones (Options Pattern)
 //    Carga la sección "Gemini" desde appsettings.json y la vincula a la clase GeminiSettings.
 builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("Gemini"));
+builder.Services.Configure<GoogleCloudSettings>(builder.Configuration.GetSection("GoogleCloud"));
 
-// 4. Inyección de Dependencias Personalizadas.
-builder.Services.AddScoped<IExtractionService, GeminiExtractionService>();
-builder.Services.AddScoped<IPayrollService, PayrollService>();
+// 4. Entity Framework + PostgreSQL
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 5. Registra el cliente del servicio de predicción de Vertex AI como Singleton.
-//    Se recomienda usar un único cliente por la vida de la aplicación.
+// 5. Inyección de Dependencias — Repositorios
+builder.Services.AddScoped<IExtractionTemplateRepository, ExtractionTemplateRepository>();
+builder.Services.AddScoped<IDocumentBatchRepository, DocumentBatchRepository>();
+builder.Services.AddScoped<IExtractionJobRepository, ExtractionJobRepository>();
+
+// 6. Inyección de Dependencias — Servicios de Aplicación
+builder.Services.AddScoped<IExtractionTemplateService, ExtractionTemplateService>();
+builder.Services.AddScoped<IDocumentBatchService, DocumentBatchService>();
+builder.Services.AddScoped<IExtractionJobProcessor, ExtractionJobProcessor>();
+builder.Services.AddScoped<IExtractionValidationService, ExtractionValidationService>();
+builder.Services.AddScoped<IPromptBuilderService, PromptBuilderService>();
+
+// 7. Inyección de Dependencias — Infraestructura
+builder.Services.AddScoped<IDocumentStorageService, GcsDocumentStorageService>();
+builder.Services.AddScoped<IAiExtractionService, ComponentesIA.Infrastructure.AI.GeminiExtractionService>();
+
+// 8. Cola en memoria para procesamiento asíncrono de jobs
+var jobChannel = Channel.CreateUnbounded<Guid>(new UnboundedChannelOptions { SingleReader = true });
+builder.Services.AddSingleton(jobChannel);
+builder.Services.AddSingleton<IJobDispatcher, InMemoryJobDispatcher>();
+builder.Services.AddHostedService<JobProcessorBackgroundService>();
+
+// 9. PayrollService (existente — se mantiene)
+builder.Services.AddScoped<ComponentesIA.Services.Contracts.IPayrollService, ComponentesIA.Services.PayrollService>();
+
+// 10. Registra el cliente del servicio de predicción de Vertex AI como Singleton.
 builder.Services.AddSingleton<PredictionServiceClient>(provider =>
 {
     var settings = provider.GetRequiredService<IOptions<GeminiSettings>>().Value;
