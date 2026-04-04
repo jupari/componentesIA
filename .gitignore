@@ -1,0 +1,10 @@
+# Extensiones y configuraciones de VS Code
+.vscode/
+*.code-workspace
+
+# Dependencias (ejemplo para Node.js)
+node_modules/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db

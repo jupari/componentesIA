@@ -1,0 +1,11 @@
+@ComponentesIA_HostAddress = http://localhost:5010
+
+GET {{ComponentesIA_HostAddress}}/swagger/
+Accept: application/json
+
+###
+
+GET {{ComponentesIA_HostAddress}}/swagger/1
+Accept: application/json
+
+###

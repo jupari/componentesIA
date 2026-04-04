@@ -1,0 +1,244 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "API de Componentes IA",
+    "description": "API para la extracción de datos y otros componentes de IA.",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/CamaraComercio/upload-document": {
+      "post": {
+        "tags": [
+          "CamaraComercio"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "File": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "File": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/api/Payroll/calculate": {
+      "post": {
+        "tags": [
+          "Payroll"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayrollRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayrollRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayrollRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayrollResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PayrollRequestDto": {
+        "required": [
+          "baseSalary",
+          "daysWorked"
+        ],
+        "type": "object",
+        "properties": {
+          "baseSalary": {
+            "minimum": 1,
+            "type": "number",
+            "format": "double"
+          },
+          "daysWorked": {
+            "maximum": 31,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "daytimeOvertimeHours": {
+            "maximum": 200,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "nighttimeOvertimeHours": {
+            "maximum": 200,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "holidayOvertimeHours": {
+            "maximum": 200,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PayrollResultDto": {
+        "type": "object",
+        "properties": {
+          "baseSalary": {
+            "type": "number",
+            "format": "double"
+          },
+          "earnedSalary": {
+            "type": "number",
+            "format": "double"
+          },
+          "overtimePay": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAccrued": {
+            "type": "number",
+            "format": "double"
+          },
+          "healthInsuranceDeduction": {
+            "type": "number",
+            "format": "double"
+          },
+          "pensionDeduction": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalDeductions": {
+            "type": "number",
+            "format": "double"
+          },
+          "netPayable": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+2026-03-31 21:14:33.242 -05:00 [ERR] An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: Reflection-based serialization has been disabled for this application. Either use the source generator APIs or explicitly configure the 'JsonSerializerOptions.TypeInfoResolver' property.
+   at System.Text.Json.ThrowHelper.ThrowInvalidOperationException_JsonSerializerIsReflectionDisabled()
+   at System.Text.Json.JsonSerializerOptions.ConfigureForJsonSerializer()
+   at System.Text.Json.JsonSerializer.GetTypeInfo(JsonSerializerOptions options, Type inputType)
+   at System.Text.Json.JsonSerializer.GetTypeInfo[T](JsonSerializerOptions options)
+   at System.Text.Json.JsonSerializer.Serialize[TValue](TValue value, JsonSerializerOptions options)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.GetIndexArguments()
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.RespondWithIndexHtml(HttpResponse response)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
