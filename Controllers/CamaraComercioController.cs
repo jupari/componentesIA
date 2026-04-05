@@ -1,6 +1,7 @@
 using ComponentesIA.Application.DTOs;
 using ComponentesIA.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ComponentesIA.Controllers;
 
@@ -28,6 +29,7 @@ public class CamaraComercioController : ControllerBase
     /// Requiere que exista una plantilla con código "camara_comercio".
     /// </summary>
     [HttpPost("upload-document")]
+    [Authorize(Policy = "UploadDocument")]
     [ProducesResponseType(typeof(BatchResponseDto), StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadDocument(
@@ -57,5 +59,16 @@ public class CamaraComercioController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    // Ejemplo de uso de claims personalizados en el controlador
+    private string? GetUserId()
+    {
+        return User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    private List<string> GetUserPermissions()
+    {
+        return User?.Claims.Where(c => c.Type == "permission").Select(c => c.Value).ToList() ?? new List<string>();
     }
 }

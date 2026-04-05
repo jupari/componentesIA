@@ -7,17 +7,71 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    public DbSet<ExtractionTemplate> ExtractionTemplates => Set<ExtractionTemplate>();
-    public DbSet<ExtractionField> ExtractionFields => Set<ExtractionField>();
-    public DbSet<DocumentBatch> DocumentBatches => Set<DocumentBatch>();
-    public DbSet<DocumentFile> DocumentFiles => Set<DocumentFile>();
-    public DbSet<ExtractionJob> ExtractionJobs => Set<ExtractionJob>();
-    public DbSet<ExtractionResult> ExtractionResults => Set<ExtractionResult>();
-    public DbSet<ExtractionFieldResult> ExtractionFieldResults => Set<ExtractionFieldResult>();
+    public DbSet<ExtractionTemplate> ExtractionTemplates { get; set; }
+    public DbSet<ExtractionField> ExtractionFields { get; set; }
+    public DbSet<DocumentBatch> DocumentBatches { get; set; }
+    public DbSet<DocumentFile> DocumentFiles { get; set; }
+    public DbSet<ExtractionJob> ExtractionJobs { get; set; }
+    public DbSet<ExtractionResult> ExtractionResults { get; set; }
+    public DbSet<ExtractionFieldResult> ExtractionFieldResults { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
+    // Auth/Identity
+    public DbSet<User> Users { get; set; }
+    public DbSet<Role> Roles { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<UserRole> UserRoles { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // --- Auth/Identity ---
+            modelBuilder.Entity<User>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.HasIndex(x => x.UserName).IsUnique();
+                e.HasIndex(x => x.Email).IsUnique();
+                e.Property(x => x.UserName).HasMaxLength(100).IsRequired();
+                e.Property(x => x.Email).HasMaxLength(200).IsRequired();
+                e.Property(x => x.PasswordHash).IsRequired();
+            });
+
+            modelBuilder.Entity<Role>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.HasIndex(x => x.Name).IsUnique();
+                e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            });
+
+            modelBuilder.Entity<Permission>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.HasIndex(x => x.Name).IsUnique();
+                e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            });
+
+            modelBuilder.Entity<UserRole>(e =>
+            {
+                e.HasKey(x => new { x.UserId, x.RoleId });
+                e.HasOne(x => x.User)
+                    .WithMany(u => u.UserRoles)
+                    .HasForeignKey(x => x.UserId);
+                e.HasOne(x => x.Role)
+                    .WithMany(r => r.UserRoles)
+                    .HasForeignKey(x => x.RoleId);
+            });
+
+            modelBuilder.Entity<RolePermission>(e =>
+            {
+                e.HasKey(x => new { x.RoleId, x.PermissionId });
+                e.HasOne(x => x.Role)
+                    .WithMany(r => r.RolePermissions)
+                    .HasForeignKey(x => x.RoleId);
+                e.HasOne(x => x.Permission)
+                    .WithMany(p => p.RolePermissions)
+                    .HasForeignKey(x => x.PermissionId);
+            });
+
+            base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<ExtractionTemplate>(e =>
         {
