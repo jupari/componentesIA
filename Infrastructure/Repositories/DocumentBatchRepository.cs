@@ -14,6 +14,14 @@ public class DocumentBatchRepository : IDocumentBatchRepository
         _context = context;
     }
 
+    public Task<List<DocumentBatch>> GetAllAsync(string? uploadedBy = null, CancellationToken ct = default)
+    {
+        var query = _context.DocumentBatches.AsQueryable();
+        if (!string.IsNullOrEmpty(uploadedBy))
+            query = query.Where(b => b.UploadedBy == uploadedBy);
+        return query.OrderByDescending(b => b.CreatedAt).ToListAsync(ct);
+    }
+
     public Task<DocumentBatch?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _context.DocumentBatches.FirstOrDefaultAsync(b => b.Id == id, ct);
 

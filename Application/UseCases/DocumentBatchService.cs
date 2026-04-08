@@ -145,6 +145,23 @@ public class DocumentBatchService : IDocumentBatchService
         };
     }
 
+    public async Task<List<BatchResponseDto>> GetBatchesAsync(string? uploadedBy = null, CancellationToken ct = default)
+    {
+        var batches = await _batchRepo.GetAllAsync(uploadedBy, ct);
+        return batches.Select(b => new BatchResponseDto
+        {
+            BatchId            = b.Id,
+            TemplateId         = b.TemplateId,
+            UploadedBy         = b.UploadedBy,
+            Status             = b.Status.ToString(),
+            TotalDocuments     = b.TotalDocuments,
+            ProcessedDocuments = b.ProcessedDocuments,
+            FailedDocuments    = b.FailedDocuments,
+            CreatedAt          = b.CreatedAt,
+            Jobs               = new List<JobSummaryDto>()
+        }).ToList();
+    }
+
     public async Task<BatchResponseDto?> GetBatchAsync(Guid batchId, CancellationToken ct = default)
     {
         var batch = await _batchRepo.GetByIdWithJobsAsync(batchId, ct);

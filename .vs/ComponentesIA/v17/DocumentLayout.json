@@ -1,12 +1,7 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\proyecto-personal\\pry-IA\\pryAPI\\ComponentesIA\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{19C089EE-60CB-49DB-B06B-ED0EC7636FBA}|ComponentesIA.csproj|c:\\proyecto-personal\\pry-ia\\pryapi\\componentesia\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{19C089EE-60CB-49DB-B06B-ED0EC7636FBA}|ComponentesIA.csproj|solutionrelative:.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -14,7 +9,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 9,
+          "SelectedChildIndex": -1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -51,19 +46,6 @@
             {
               "$type": "Bookmark",
               "Name": "ST:132:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": ".gitignore",
-              "DocumentMoniker": "C:\\proyecto-personal\\pry-IA\\pryAPI\\ComponentesIA\\.gitignore",
-              "RelativeDocumentMoniker": ".gitignore",
-              "ToolTip": "C:\\proyecto-personal\\pry-IA\\pryAPI\\ComponentesIA\\.gitignore",
-              "RelativeToolTip": ".gitignore",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-04-08T02:16:04.772Z",
-              "EditorCaption": ""
             }
           ]
         },

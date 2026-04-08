@@ -74,6 +74,107 @@ public class AuthService : IAuthService
         return true;
     }
 
+    public async Task<bool> SetUserStatusAsync(Guid userId, bool isActive)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null) return false;
+        user.IsActive = isActive;
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    // ── Read ─────────────────────────────────────────────────────────────────
+
+    public async Task<List<UserListItemDto>> GetUsersAsync()
+    {
+        return await _db.Users
+            .Select(u => new UserListItemDto
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                Email = u.Email,
+                IsActive = u.IsActive,
+                CreatedAt = u.CreatedAt,
+                Roles = u.UserRoles.Select(ur => ur.Role.Name).ToList()
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<RoleDto>> GetRolesAsync()
+    {
+        return await _db.Roles
+            .Select(r => new RoleDto
+            {
+                Id = r.Id,
+                Name = r.Name,
+                Description = r.Description,
+                PermissionIds = r.RolePermissions.Select(rp => rp.PermissionId).ToList()
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<PermissionDto>> GetPermissionsAsync()
+    {
+        return await _db.Permissions
+            .Select(p => new PermissionDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Category = p.Category
+            })
+            .ToListAsync();
+    }
+
+    // ── Write (roles) ────────────────────────────────────────────────────────
+
+    public async Task<RoleDto> CreateRoleAsync(CreateRoleDto dto)
+    {
+        if (await _db.Roles.AnyAsync(r => r.Name == dto.Name))
+            throw new Exception($"Ya existe un rol con el nombre '{dto.Name}'");
+
+        var role = new Role { Id = Guid.NewGuid(), Name = dto.Name, Description = dto.Description };
+        _db.Roles.Add(role);
+
+        foreach (var permId in dto.PermissionIds)
+        {
+            if (await _db.Permissions.AnyAsync(p => p.Id == permId))
+                _db.RolePermissions.Add(new RolePermission { RoleId = role.Id, PermissionId = permId });
+        }
+
+        await _db.SaveChangesAsync();
+
+        return new RoleDto
+        {
+            Id = role.Id,
+            Name = role.Name,
+            Description = role.Description,
+            PermissionIds = dto.PermissionIds
+        };
+    }
+
+    public async Task<bool> DeleteRoleAsync(Guid roleId)
+    {
+        var role = await _db.Roles.Include(r => r.RolePermissions).Include(r => r.UserRoles)
+            .FirstOrDefaultAsync(r => r.Id == roleId);
+        if (role == null) return false;
+        _db.RolePermissions.RemoveRange(role.RolePermissions);
+        _db.UserRoles.RemoveRange(role.UserRoles);
+        _db.Roles.Remove(role);
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> RevokePermissionFromRoleAsync(Guid roleId, Guid permissionId)
+    {
+        var rp = await _db.RolePermissions
+            .FirstOrDefaultAsync(x => x.RoleId == roleId && x.PermissionId == permissionId);
+        if (rp == null) return false;
+        _db.RolePermissions.Remove(rp);
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<AuthResponseDto> GenerateAuthResponse(User user)
     {
         var roles = await _db.UserRoles.Where(ur => ur.UserId == user.Id)

@@ -15,6 +15,14 @@ public class ExtractionBatchesController : ControllerBase
         _batchService = batchService;
     }
 
+    [HttpGet]
+    [ProducesResponseType(typeof(List<BatchResponseDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetBatches([FromQuery] string? uploadedBy, CancellationToken ct)
+    {
+        var batches = await _batchService.GetBatchesAsync(uploadedBy, ct);
+        return Ok(batches);
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(BatchResponseDto), StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
