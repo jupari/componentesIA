@@ -1,4 +1,5 @@
 # Extensiones y configuraciones de VS Code
+.vs
 .vscode/
 *.code-workspace
 
