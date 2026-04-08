@@ -316,6 +316,9 @@ namespace ComponentesIA.Infrastructure.Persistence.Migrations
                     b.Property<string>("PromptStrategy")
                         .HasColumnType("text");
 
+                    b.Property<string>("SampleDocumentPath")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 

@@ -64,6 +64,7 @@ public class TemplateResponseDto
     public string? ModelName { get; set; }
     public string? PromptStrategy { get; set; }
     public bool IsActive { get; set; }
+    public string? SampleDocumentPath { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<FieldResponseDto> Fields { get; set; } = new();
 }

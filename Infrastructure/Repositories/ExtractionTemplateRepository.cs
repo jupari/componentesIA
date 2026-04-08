@@ -36,6 +36,12 @@ public class ExtractionTemplateRepository : IExtractionTemplateRepository
         return await query.AnyAsync(ct);
     }
 
+    public void RemoveFields(IEnumerable<ExtractionField> fields)
+        => _context.ExtractionFields.RemoveRange(fields);
+
+    public void AddFields(IEnumerable<ExtractionField> fields)
+        => _context.ExtractionFields.AddRange(fields);
+
     public async Task AddAsync(ExtractionTemplate template, CancellationToken ct = default)
         => await _context.ExtractionTemplates.AddAsync(template, ct);
 

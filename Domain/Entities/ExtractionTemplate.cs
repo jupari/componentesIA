@@ -10,6 +10,7 @@ public class ExtractionTemplate
     public string? ModelName { get; set; }
     public string? PromptStrategy { get; set; }
     public bool IsActive { get; set; } = true;
+    public string? SampleDocumentPath { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

@@ -56,4 +56,13 @@ public class ExtractionBatchesController : ControllerBase
         var jobs = await _batchService.GetBatchJobsAsync(batchId, ct);
         return Ok(jobs);
     }
+
+    [HttpGet("{batchId:guid}/jobs/details")]
+    [ProducesResponseType(typeof(List<JobDetailDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetBatchJobsDetail(Guid batchId, CancellationToken ct)
+    {
+        var jobs = await _batchService.GetBatchJobsDetailAsync(batchId, ct);
+        return jobs is null ? NotFound() : Ok(jobs);
+    }
 }

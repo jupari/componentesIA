@@ -23,6 +23,14 @@ public class DocumentBatchRepository : IDocumentBatchRepository
                 .ThenInclude(d => d.Job)
             .FirstOrDefaultAsync(b => b.Id == id, ct);
 
+    public Task<DocumentBatch?> GetByIdWithJobsDetailAsync(Guid id, CancellationToken ct = default)
+        => _context.DocumentBatches
+            .Include(b => b.Documents)
+                .ThenInclude(d => d.Job!)
+                    .ThenInclude(j => j.Result!)
+                        .ThenInclude(r => r.FieldResults)
+            .FirstOrDefaultAsync(b => b.Id == id, ct);
+
     public async Task AddAsync(DocumentBatch batch, CancellationToken ct = default)
         => await _context.DocumentBatches.AddAsync(batch, ct);
 

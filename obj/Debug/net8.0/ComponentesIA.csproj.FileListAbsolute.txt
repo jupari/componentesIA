@@ -168,3 +168,4 @@ C:\proyecto-personal\pry-IA\pryAPI\ComponentesIA\obj\Debug\net8.0\refint\Compone
 C:\proyecto-personal\pry-IA\pryAPI\ComponentesIA\obj\Debug\net8.0\ComponentesIA.pdb
 C:\proyecto-personal\pry-IA\pryAPI\ComponentesIA\obj\Debug\net8.0\ComponentesIA.genruntimeconfig.cache
 C:\proyecto-personal\pry-IA\pryAPI\ComponentesIA\obj\Debug\net8.0\ref\ComponentesIA.dll
+C:\proyecto-personal\pry-IA\pryAPI\ComponentesIA\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

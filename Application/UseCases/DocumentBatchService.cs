@@ -104,7 +104,7 @@ public class DocumentBatchService : IDocumentBatchService
 
             var job = new ExtractionJob
             {
-                DocumentFileId = docFile.Id,
+                DocumentFile = docFile,
                 TemplateId = dto.TemplateId,
                 Status = JobStatus.Pending
             };
@@ -183,6 +183,47 @@ public class DocumentBatchService : IDocumentBatchService
             Status = d.Job?.Status.ToString() ?? JobStatus.Pending.ToString(),
             Attempts = d.Job?.Attempts ?? 0,
             CreatedAt = d.Job?.CreatedAt ?? d.CreatedAt
+        }).ToList();
+    }
+
+    public async Task<List<JobDetailDto>?> GetBatchJobsDetailAsync(Guid batchId, CancellationToken ct = default)
+    {
+        var batch = await _batchRepo.GetByIdWithJobsDetailAsync(batchId, ct);
+        if (batch is null) return null;
+
+        return batch.Documents.Select(d =>
+        {
+            var job = d.Job;
+            return new JobDetailDto
+            {
+                JobId = job?.Id ?? Guid.Empty,
+                FileName = d.OriginalFileName,
+                Status = job?.Status.ToString() ?? JobStatus.Pending.ToString(),
+                Provider = job?.Provider,
+                Model = job?.Model,
+                Attempts = job?.Attempts ?? 0,
+                StartedAt = job?.StartedAt,
+                FinishedAt = job?.FinishedAt,
+                ErrorMessage = job?.ErrorMessage,
+                Result = job?.Result is null ? null : new JobResultDto
+                {
+                    ResultId = job.Result.Id,
+                    RawResponse = job.Result.RawResponse,
+                    NormalizedJson = job.Result.NormalizedJson,
+                    ValidationStatus = job.Result.ValidationStatus,
+                    ConfidenceScore = job.Result.ConfidenceScore,
+                    CreatedAt = job.Result.CreatedAt,
+                    Fields = job.Result.FieldResults.Select(f => new FieldResultDto
+                    {
+                        FieldKey = f.FieldKey,
+                        RawValue = f.RawValue,
+                        NormalizedValue = f.NormalizedValue,
+                        Confidence = f.Confidence,
+                        IsValid = f.IsValid,
+                        ValidationMessage = f.ValidationMessage
+                    }).ToList()
+                }
+            };
         }).ToList();
     }
 }

@@ -57,4 +57,24 @@ public class ExtractionTemplatesController : ControllerBase
         var result = await _service.UpdateAsync(id, dto, ct);
         return result is null ? NotFound() : Ok(result);
     }
+
+    [HttpPost("{id:guid}/sample")]
+    [ProducesResponseType(typeof(TemplateResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequestSizeLimit(20 * 1024 * 1024)]
+    public async Task<IActionResult> UploadSample(Guid id, IFormFile file, CancellationToken ct)
+    {
+        var result = await _service.UploadSampleAsync(id, file, ct);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    [HttpGet("{id:guid}/sample")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSample(Guid id, CancellationToken ct)
+    {
+        var result = await _service.GetSampleAsync(id, ct);
+        if (result is null) return NotFound();
+        return File(result.Value.Bytes, result.Value.ContentType, result.Value.FileName);
+    }
 }

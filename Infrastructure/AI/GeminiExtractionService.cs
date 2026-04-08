@@ -37,6 +37,14 @@ public class GeminiExtractionService : IAiExtractionService
             _geminiSettings.Publisher,
             _geminiSettings.Model);
 
+        _logger.LogInformation(
+            "Vertex AI endpoint: Project={Project}, Location={Location}, Publisher={Publisher}, Model={Model} → {Endpoint}",
+            _geminiSettings.ProjectId,
+            _geminiSettings.Location,
+            _geminiSettings.Publisher,
+            _geminiSettings.Model,
+            endpoint.ToString());
+
         var userPrompt = $"Extrae la información del documento siguiendo exactamente este esquema JSON:\n{expectedJsonSchema}";
 
         var request = new GenerateContentRequest

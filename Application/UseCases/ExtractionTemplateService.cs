@@ -2,6 +2,7 @@ using ComponentesIA.Application.DTOs;
 using ComponentesIA.Application.Interfaces;
 using ComponentesIA.Domain.Entities;
 using ComponentesIA.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace ComponentesIA.Application.UseCases;
@@ -9,10 +10,12 @@ namespace ComponentesIA.Application.UseCases;
 public class ExtractionTemplateService : IExtractionTemplateService
 {
     private readonly IExtractionTemplateRepository _repository;
+    private readonly IDocumentStorageService _storage;
 
-    public ExtractionTemplateService(IExtractionTemplateRepository repository)
+    public ExtractionTemplateService(IExtractionTemplateRepository repository, IDocumentStorageService storage)
     {
         _repository = repository;
+        _storage = storage;
     }
 
     public async Task<List<TemplateResponseDto>> GetAllAsync(CancellationToken ct = default)
@@ -64,12 +67,19 @@ public class ExtractionTemplateService : IExtractionTemplateService
         template.IsActive = dto.IsActive;
         template.UpdatedAt = DateTime.UtcNow;
 
-        // Replace fields entirely
-        template.Fields.Clear();
-        foreach (var f in dto.Fields)
-            template.Fields.Add(MapToField(f, template.Id));
-
+        // Step 1: delete existing fields and commit — runs DELETE + UPDATE in isolation
+        _repository.RemoveFields(template.Fields.ToList());
         await _repository.SaveChangesAsync(ct);
+
+        // Step 2: insert new fields via DbSet directly — avoids re-attaching Detached entities
+        // (calling template.Fields.Clear() after AcceptAllChanges would re-attach Deleted→Detached
+        // items and cause a second DELETE that affects 0 rows → DbUpdateConcurrencyException)
+        var newFields = dto.Fields.Select(f => MapToField(f, template.Id)).ToList();
+        _repository.AddFields(newFields);
+        await _repository.SaveChangesAsync(ct);
+
+        // Re-query to return fresh data with the new fields
+        template = (await _repository.GetByIdWithFieldsAsync(id, ct))!;
         return MapToResponse(template);
     }
 
@@ -89,6 +99,31 @@ public class ExtractionTemplateService : IExtractionTemplateService
         ConfidenceThreshold = f.ConfidenceThreshold
     };
 
+    public async Task<TemplateResponseDto?> UploadSampleAsync(Guid id, IFormFile file, CancellationToken ct = default)
+    {
+        var template = await _repository.GetByIdWithFieldsAsync(id, ct);
+        if (template is null) return null;
+
+        using var stream = file.OpenReadStream();
+        var storagePath = await _storage.UploadAsync(stream, $"templates/{id}/sample/{file.FileName}", file.ContentType, ct);
+
+        template.SampleDocumentPath = storagePath;
+        template.UpdatedAt = DateTime.UtcNow;
+        await _repository.SaveChangesAsync(ct);
+
+        return MapToResponse(template);
+    }
+
+    public async Task<(byte[] Bytes, string ContentType, string FileName)?> GetSampleAsync(Guid id, CancellationToken ct = default)
+    {
+        var template = await _repository.GetByIdWithFieldsAsync(id, ct);
+        if (template is null || string.IsNullOrEmpty(template.SampleDocumentPath)) return null;
+
+        var bytes = await _storage.DownloadAsync(template.SampleDocumentPath, ct);
+        var fileName = Path.GetFileName(template.SampleDocumentPath);
+        return (bytes, "application/pdf", fileName);
+    }
+
     private static TemplateResponseDto MapToResponse(ExtractionTemplate t) => new()
     {
         Id = t.Id,
@@ -99,6 +134,7 @@ public class ExtractionTemplateService : IExtractionTemplateService
         ModelName = t.ModelName,
         PromptStrategy = t.PromptStrategy,
         IsActive = t.IsActive,
+        SampleDocumentPath = t.SampleDocumentPath,
         CreatedAt = t.CreatedAt,
         Fields = t.Fields.OrderBy(f => f.Order).Select(f => new FieldResponseDto
         {
